@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model categorias {
+  id_categoria Int         @id @default(autoincrement())
+  nombre       String      @unique @db.VarChar(50)
+  descripcion  String?     @db.VarChar(140)
+  productos    productos[]
+}
+
+model detalles_facturas {
+  id_detalle_factura Int       @id @default(autoincrement())
+  id_factura         Int
+  id_producto        Int
+  cantidad_producto  Int
+  fecha_creacion     DateTime  @db.Date
+  facturas           facturas  @relation(fields: [id_factura], references: [id_factura], onDelete: Cascade, onUpdate: NoAction, map: "fk_facturas_detalles")
+  productos          productos @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade, onUpdate: NoAction, map: "fk_productos_detalles")
+}
+
+model facturas {
+  id_factura        Int                 @id @default(autoincrement())
+  fecha_venta       DateTime            @db.Date
+  vendedor_factura  String              @db.VarChar(100)
+  cantidad_producto Int
+  id_tienda         Int
+  detalles_facturas detalles_facturas[]
+  tiendas           tiendas             @relation(fields: [id_tienda], references: [id_tienda], onDelete: Cascade, onUpdate: NoAction, map: "fk_tiendas_facturas")
+}
+
+model productos {
+  id_producto       Int                 @id @default(autoincrement())
+  nombre            String              @db.VarChar(50)
+  marca             String              @db.VarChar(50)
+  precio_unitario   Float
+  fecha_caducidad   DateTime?           @db.Date
+  descripcion       String              @db.VarChar(255)
+  stock             Int
+  id_categoria      Int
+  detalles_facturas detalles_facturas[]
+  categorias        categorias          @relation(fields: [id_categoria], references: [id_categoria], onDelete: Cascade, onUpdate: NoAction, map: "fk_categorias_productos")
+}
+
+model roles {
+  id_rol     Int        @id @default(autoincrement())
+  nombre_rol String     @unique @db.VarChar(50)
+  usuarios   usuarios[]
+}
+
+model tiendas {
+  id_tienda          Int        @id @default(autoincrement())
+  nombre_tienda      String     @db.VarChar(50)
+  direccion_tienda   String     @db.VarChar(50)
+  telefono_tienda    String     @db.VarChar(15)
+  propietario_tienda String     @db.VarChar(50)
+  facturas           facturas[]
+  usuarios           usuarios[]
+}
+
+model usuarios {
+  id_usuario Int     @id @default(autoincrement())
+  username   String  @unique @db.VarChar(50)
+  password   String  @db.VarChar(255)
+  id_tienda  Int
+  id_rol     Int
+  roles      roles   @relation(fields: [id_rol], references: [id_rol], onDelete: Cascade, onUpdate: NoAction, map: "fk_roles_usuarios")
+  tiendas    tiendas @relation(fields: [id_tienda], references: [id_tienda], onDelete: Cascade, onUpdate: NoAction, map: "fk_tiendas_usuarios")
+}
